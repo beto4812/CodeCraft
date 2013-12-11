@@ -11,69 +11,154 @@ package compilador;
  * @author Alberto
  */
 public class CodigoEnsamblador {
+    
+    static String goTo(int tag){
+        System.out.println("LLAMANDOGOTO");
+        return ";goto "+tag+"\n"+
+                "jmp "+tag+"\n";
+    }
+
+    static String comparaciones(String var1, String cmp, String var2, int tag) {
+        String codigoTemp = ";if " + var1 + cmp + var2 + "goto" + tag + "\n";
+        if (var1.matches("\\d")) {
+            //El primero es constante
+            codigoTemp += "mov t1," + var1 + "\n";
+        } else {
+            //El primero es variable
+            codigoTemp += "mov ax, " + var1 + "\n";
+            codigoTemp += "mov t1, ax" + "\n";
+        }
+        if (var2.matches("\\d")) {
+            //El segundo es constante
+            codigoTemp += "mov t2," + var2 + "\n";
+        } else {
+            //El segundo es variable
+            codigoTemp += "mov ax, " + var2 + "\n";
+            codigoTemp += "mov t2, ax" + "\n";
+        }
+
+        switch (cmp) {
+            case "==":
+                return codigoTemp += var1_igual_igual_var2(tag);
+            case "<":
+                return codigoTemp += var1_menor_var2(tag);
+            case "<=":
+                return codigoTemp += var1_menor_igual_var2(tag);
+            case ">":
+                return codigoTemp += var1_mayor_var2(tag);
+            case ">=":
+                return codigoTemp += var1_mayor_igual_var2(tag);
+        }
+        return "error";
+    }
+
+    static String var1_menor_var2(int tag) {
+        return "mov ax, t1\n"
+                + "cmp ax, t2\n"
+                + "jl   T" + tag + "\n";
+    }
+
+    static String var1_menor_igual_var2(int tag) {
+        return "mov ax, t1\n"
+                + "cmp ax, t2\n"
+                + "jle   T" + tag + "\n";
+    }
+
+    static String var1_mayor_var2(int tag) {
+        return "mov ax, t1\n"
+                + "cmp ax, t2\n"
+                + "jg   T" + tag + "\n";
+    }
+
+    static String var1_mayor_igual_var2(int tag) {
+        return "mov ax, t1\n"
+                + "cmp ax, t2\n"
+                + "jge   T" + tag + "\n";
+    }
+
+    static String var1_igual_igual_var2(int tag) {
+        return "mov ax, t1\n"
+                + "cmp ax, t2\n"
+                + "je   T" + tag + "\n";
+    }
 
     static String asignaciones(String asign, String op1, String operador, String op2) {
         switch (operador) {
             case "+":
-                //necesito saber si el operador es una variable O un temporal (Se tratan igual)
-
-                
-                if ((op1.contains("t") || op1.contains("a")) && !(op2.contains("t") || op2.contains("a"))) {
-                    System.out.println("arg+const");
-                    return arg_plus_const(asign, op1, operador, op2);
-                } else if (!(op1.contains("t") || op1.contains("a")) && !(op2.contains("t") || op2.contains("a"))) {
-                    System.out.println("const+const");
-                    return const_plus_const(asign, op1, operador, op2);
-                } else {
-                    return arg_plus_arg(asign, op1, operador, op2);
+                if (op1.matches("\\d") && op2.matches("\\d")) {
+                    //return "const+const";
+                    return ";const_plus_const" + const_plus_const(asign, op1, operador, op2);
+                } else if (!op1.matches("\\d") && op2.matches("\\d")) {
+                    //return "arg+const";
+                    return ";arg_plus_const" + arg_plus_const(asign, op1, operador, op2);
+                } else if (op1.matches("\\d") && !op2.matches("\\d")) {
+                    //return "const+arg";
+                    return ";arg_plus_const" + arg_plus_const(asign, op1, operador, op2);
+                } else if (!op1.matches("\\d") && !op2.matches("\\d")) {
+                    //return "arg+arg";
+                    return ";arg_plus_arg" + arg_plus_arg(asign, op1, operador, op2);
                 }
             case "-":
-                if ((op1.contains("t") || op1.contains("a")) && !(op2.contains("t") || op2.contains("a"))) {
-                    System.out.println("arg-const");
-                    return arg_minus_const(asign, op1, operador, op2);
-                } else if (!(op1.contains("t") || op1.contains("a")) && !(op2.contains("t") || op2.contains("a"))) {
-                    System.out.println("const-const");
-                    return const_minus_const(asign, op1, operador, op2);
-                } else {
-                    return arg_minus_arg(asign, op1, operador, op2);
+                if (op1.matches("\\d") && op2.matches("\\d")) {
+                    //return "const-const";
+                    return ";const_minus_const" + const_minus_const(asign, op1, operador, op2);
+                } else if (!op1.matches("\\d") && op2.matches("\\d")) {
+                    //return "arg-const";
+                    return ";arg_minus_const" + arg_minus_const(asign, op1, operador, op2);
+                } else if (op1.matches("\\d") && !op2.matches("\\d")) {
+                    //return "const-arg";
+                    return ";const_minus_arg" + const_minus_arg(asign, op1, operador, op2);
+                } else if (!op1.matches("\\d") && !op2.matches("\\d")) {
+                    //return "arg+arg";
+                    return ";arg_minus_arg" + arg_minus_arg(asign, op1, operador, op2);
                 }
-
             case "*":
-                if ((op1.contains("t") || op1.contains("a")) && !(op2.contains("t") || op2.contains("a"))) {
-                    System.out.println("arg*const");
-                    return arg_times_const(asign, op1, operador, op2);
-                } else if (!(op1.contains("t") || op1.contains("a")) && !(op2.contains("t") || op2.contains("a"))) {
-                    System.out.println("const*const");
-                    return const_times_const(asign, op1, operador, op2);
-                } else {
-                    return arg_times_arg(asign, op1, operador, op2);
+                if (op1.matches("\\d") && op2.matches("\\d")) {
+                    //return "const-const";
+                    return ";const_times_const" + const_times_const(asign, op1, operador, op2);
+                } else if (!op1.matches("\\d") && op2.matches("\\d")) {
+                    //return "arg-const";
+                    return ";arg_times_const" + arg_times_const(asign, op1, operador, op2);
+                } else if (op1.matches("\\d") && !op2.matches("\\d")) {
+                    //return "const-arg";
+                    return ";arg_times_const" + arg_times_const(asign, op1, operador, op2);
+                } else if (!op1.matches("\\d") && !op2.matches("\\d")) {
+                    //return "arg+arg";
+                    return ";arg_times_arg" + arg_times_arg(asign, op1, operador, op2);
                 }
             case "/":
-                if ((op1.contains("t") || op1.contains("a")) && !(op2.contains("t") || op2.contains("a"))) {
-                    System.out.println("arg/const");
-                    return arg_over_const(asign, op1, operador, op2);
-                } else if (!(op1.contains("t") || op1.contains("a")) && !(op2.contains("t") || op2.contains("a"))) {
-                    System.out.println("const/const");
-                    return const_over_const(asign, op1, operador, op2);
-                } else {
-                    return arg_over_arg(asign, op1, operador, op2);
+                if (op1.matches("\\d") && op2.matches("\\d")) {
+                    //return "const-const";
+                    return ";const_over_const" + const_over_const(asign, op1, operador, op2);
+                } else if (!op1.matches("\\d") && op2.matches("\\d")) {
+                    //return "arg-const";
+                    return ";arg_over_const" + arg_over_const(asign, op1, operador, op2);
+                } else if (op1.matches("\\d") && !op2.matches("\\d")) {
+                    //return "const-arg";
+                    return ";const_over_arg" + const_over_arg(asign, op1, operador, op2);
+                } else if (!op1.matches("\\d") && !op2.matches("\\d")) {
+                    //return "arg+arg";
+                    return ";arg_over_arg" + arg_over_arg(asign, op1, operador, op2);
                 }
         }
         return "";
     }
 
     static String asignacionVar(String var, String asign) {
-        return ";"+var+"="+asign;
-         //       +
-         //       ;
-        
-       // return "falta codigo";
+        System.out.println("LLAMADOasignacionVar");
+        return ";" + var + "=" + asign + "\n"
+                + "mov ax, " + asign + "\n"
+                + "mov " + var + ", ax\n";
+        //       +
+        //       ;
+
+        // return "falta codigo";
     }
 
     public static String arg_plus_arg(String asign, String op1, String operador, String op2) {
         return ";" + asign + "=" + op1 + operador + op2 + "\n"
-                + "mov ax, " + op1 + "; subo el operando a la memoria\n"
-                + "add ax, " + op2 + "; sumo el numero en memoria\n"
+                + "mov ax, " + op1 + "\n"
+                + "add ax, " + op2 + "\n"
                 + "mov " + asign + ", ax; temp0\n";
     }
 
@@ -115,6 +200,13 @@ public class CodigoEnsamblador {
                 + "mov " + asign + ", ax\n";
     }
 
+    public static String const_minus_arg(String asign, String op1, String operador, String op2) {
+        return ";" + asign + "=" + op1 + operador + op2 + "\n"
+                + ";mov ax, " + op1 + ";\n"
+                + ";sub ax, " + op2 + ";\n"
+                + ";mov " + asign + ", ax;\n";
+    }
+
     public static String arg_times_arg(String asign, String op1, String operador, String op2) {
         return ";" + asign + "=" + op1 + operador + op2 + "\n"
                 + "mov ax, " + op2 + "\n"
@@ -154,6 +246,16 @@ public class CodigoEnsamblador {
                 + "mov ax, " + op1 + "\n"
                 + "idiv t3\n"
                 + "mov " + asign + ", ax\n";
+    }
+
+    public static String const_over_arg(String asign, String op1, String operador, String op2) {
+        return ";" + asign + "=" + op1 + operador + op2 + "\n"
+                + ";mov t1, " + op1 + ";arg1\n"
+                + ";mov dx, 0\n"
+                + ";mov ax, " + op2 + "\n"
+                + ";idiv " + op2 + "\n"
+                + ";mov " + asign + ", ax\n"
+                + ";call printud  ";
     }
 
     //Uso t3 y t4

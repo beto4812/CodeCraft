@@ -648,7 +648,7 @@ public class CodigoIntermedio {
             throw new Exception("No se pudo imprimir etiqueta->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><");
             //return "-1";
         }
-        return this.getIdEtiqueta(nombre) + ": ";
+        return "T"+getIdEtiqueta(nombre) + ": ";
     }
 
     public String imprimirLista(ArrayList<String[]> codigoEntrada) {
@@ -796,6 +796,7 @@ public class CodigoIntermedio {
      * @return
      */
     public String S_assign(ArrayList<String[]> codigoEntrada, String prefijo) {
+        System.out.println("ENTREAS_assign");
         String entrada = this.imprimirLista(codigoEntrada);
         String codigoSalida = "";
         int nTemps = 1;
@@ -907,6 +908,9 @@ public class CodigoIntermedio {
             //codigoSalida+=(";"+var+"="+ultimoAsignado);
             codigoSalida += CodigoEnsamblador.asignacionVar(var, ultimoAsignado);
             // System.err.println("ultimo pila: "+ultimoPeek+"SALI DE LOOP ");
+        }else{
+            System.out.println("AQUI2884");
+            codigoSalida += CodigoEnsamblador.asignacionVar(var, expr);
         }
         /*
          System.out.println("cont vale: " + cont);
@@ -985,7 +989,8 @@ public class CodigoIntermedio {
         if (S1.size() > 0) {
             codigoSalida += this.enviarProducciones(S1, prefijo) + "\n";
         }
-        codigoSalida += "goto " + this.getIdEtiqueta(prefijo) + "\n";
+        //codigoSalida += "goto " + this.getIdEtiqueta(prefijo) + "\n";
+        codigoSalida += CodigoEnsamblador.goTo(this.getIdEtiqueta(prefijo));
         try {
             codigoSalida += this.imprimirEtiqueta(prefijo + "B.false") + "\n";
         } catch (Exception e) {
@@ -1052,7 +1057,9 @@ public class CodigoIntermedio {
         if (S1.size() > 0) {
             codigoSalida += this.enviarProducciones(S1, prefijo) + "";
         }
-        codigoSalida += "goto " + this.getIdEtiqueta(prefijo + "inicio");
+        //codigoSalida += "goto " + this.getIdEtiqueta(prefijo + "inicio");
+        System.out.println("AQUI02");
+        codigoSalida += CodigoEnsamblador.goTo(this.getIdEtiqueta(prefijo + "inicio"));
         System.out.println("Cuerpo final de: " + prefijo + "/S_while->\n" + codigoSalida);
         return codigoSalida;
     }
@@ -1136,8 +1143,10 @@ public class CodigoIntermedio {
     }
 
     public String B_E1RELE2(ArrayList<String[]> codigoEntrada, String prefijo) {
-        String codigoSalida = "if " + codigoEntrada.get(0)[0] + " " + codigoEntrada.get(1)[0] + " " + codigoEntrada.get(2)[0] + " goto " + this.getIdEtiqueta(prefijo + ".true") + " \n"
-                + "goto " + this.getIdEtiqueta(prefijo + ".false");
+        //String codigoSalida = "if " + codigoEntrada.get(0)[0] + " " + codigoEntrada.get(1)[0] + " " + codigoEntrada.get(2)[0] + " goto " + this.getIdEtiqueta(prefijo + ".true") + " \n"
+        //        + "goto " + this.getIdEtiqueta(prefijo + ".false");
+        String codigoSalida = CodigoEnsamblador.comparaciones(codigoEntrada.get(0)[0], codigoEntrada.get(1)[0], codigoEntrada.get(2)[0], this.getIdEtiqueta(prefijo + ".true"));
+        codigoSalida+=CodigoEnsamblador.goTo(this.getIdEtiqueta(prefijo + ".false"));
         System.out.println("Codigo final de: " + prefijo + "/B_E1RELE2->\n" + codigoSalida);
         return codigoSalida;
     }

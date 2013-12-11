@@ -77,7 +77,7 @@ public class Ed extends javax.swing.JFrame {
     //documentListenerActual
     MyDocumentListener myDocumentListener = new MyDocumentListener(this);
     JTextPane jTextAreaActual;
-    EnterListener enterListenerActual = new EnterListener();
+    EnterListener enterListenerActual = new EnterListener(this);
     int idActualizacion;
     int tamañoLetra = 1; //0 chica 1 mediana 2 grande 3 extra grande
     //copiar, cortar, pegar
@@ -265,11 +265,20 @@ public class Ed extends javax.swing.JFrame {
         this.actualizarBotones();
     }
 
+    public void ctrlZ() {
+        this.deshacer();
+    }
+    
+    public void ctrlY(){
+        
+        this.rehacer();
+    }
+
     public void deshacer() {
         try {
             this.undoManager.get(this.pestañaActual).undo();
-        } catch (CannotRedoException cre) {
-            cre.printStackTrace();
+        } catch (Exception e) {
+            //cre.printStackTrace();
         }
         this.actualizarBotones();
     }
@@ -277,8 +286,8 @@ public class Ed extends javax.swing.JFrame {
     public void rehacer() {
         try {
             this.undoManager.get(this.pestañaActual).redo();
-        } catch (CannotRedoException cre) {
-            cre.printStackTrace();
+        } catch (Exception e) {
+            //cre.printStackTrace();
         }
         this.actualizarBotones();
     }
@@ -635,10 +644,10 @@ public class Ed extends javax.swing.JFrame {
         if (aSi.iniciarAnalisisSintactico()) {
             AnalisisSemantico aSe = new AnalisisSemantico(analisisLexico, this);
             aSe.iniciarAnalisisSemantico();
-            if (aSe.getNumeroDeErrores()==0) {//aSe.getNumeroDeErrores()==0
+            if (true) {//aSe.getNumeroDeErrores()==0
                 CodigoIntermedio cI = new CodigoIntermedio(this);
                 cI.iniciarCodigoIntermedio(analisisLexico);
-            }else{
+            } else {
                 JOptionPane.showMessageDialog(null, "Corrige los errores semanticos antes de continuar");
             }
         } else {
