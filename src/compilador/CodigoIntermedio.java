@@ -337,20 +337,20 @@ public class CodigoIntermedio {
         System.out.println("cadena expandida: " + cadenaExpandida);
         return cadenaExpandida;
     }
-    
-    public String expandirElse(int i, ArrayList<String[]> entrada){
+
+    public String expandirElse(int i, ArrayList<String[]> entrada) {
         String expansion = "";
-        if(entrada.get(0+1).equals("else")){
+        if (entrada.get(0 + 1).equals("else")) {
             //Si expande
-        }else{
+        } else {
             //Regreso todo igual
             for (int j = i; j < entrada.size(); j++) {
-                expansion += entrada.get(j)[0]+" ";
+                expansion += entrada.get(j)[0] + " ";
             }
         }
         return expansion;
     }
-    
+
     public void traducirCodigoIntermedio() {
         System.out.println("////////////INICIANDO TRADUCCION");
         String codigoIntermedio = "";
@@ -464,14 +464,14 @@ public class CodigoIntermedio {
                     codigoIntermedio += P(sentencia, "P");
                     break;
                 case "print":
-                    codigoIntermedio+= "CODIGO PRINT\n";
-                    j=j+2;
+                    codigoIntermedio += "CODIGO PRINT\n";
+                    j = j + 2;
                     break;
                 case "read":
-                    codigoIntermedio+= "CODIGO READ\n";
-                    j=j+2;
+                    codigoIntermedio += "CODIGO READ\n";
+                    j = j + 2;
                     break;
-                        
+
             }
         }
         System.out.println("//////////////////////////CODIGO FINAL:::::\n" + codigoIntermedio + "\n\n/////////////////////////::::::::::::::::\n");
@@ -799,7 +799,9 @@ public class CodigoIntermedio {
         String entrada = this.imprimirLista(codigoEntrada);
         String codigoSalida = "";
         int nTemps = 1;
-
+        int a = 1, t = 1;
+        boolean aActivo = false, tActivo = true;
+        String ultimoA = "", ultimoT = "";
         //divido todo lo que esta despues del igual
         StringTokenizer tokens = new StringTokenizer(entrada, "=");
         String var = tokens.nextToken();
@@ -811,7 +813,8 @@ public class CodigoIntermedio {
         Stack<String> pila2 = new Stack<>();
         int temp1 = -1, temp2 = -1;
         String ultimoPeek = "";
-        String tokensVector[] = null;
+        String ultimoAsignado = "";
+        String tokensVector[];
         int cont = 0;
 
         String st = InfixPostfix4.ejecutar(expr);
@@ -841,13 +844,57 @@ public class CodigoIntermedio {
                 //System.out.println("ULTIMO PILA: " + pila1.peek() + " size: " + pila1.size() + " size2: " + pila2.size());
                 if (pila1.peek().equals("-") || pila1.peek().equals("+") || pila1.peek().equals("*") || pila1.peek().equals("/")) {
                     //Operador //agarro los ultimos 2 de la pila y los opero
+                    System.out.println("op2: " + pila2.peek());
                     String op2 = pila2.pop();
+                    System.out.println("op1: " + pila2.peek());
                     String op1 = pila2.pop();
+                    //Se usan en orden: t1, t2 y despues a1, a2
+                    String codigoSalidaTemp = "";
                     String oper = op1 + pila1.peek() + op2;
                     System.out.println("t" + nTemps + "=" + oper);
-                    codigoSalida += "t" + nTemps + "=" + oper + "\n";
-                    pila2.push("t" + nTemps);
-                    nTemps++;
+                    //codigoSalida += "t" + nTemps + "=" + oper + "\n";
+                    if (tActivo) {
+                        System.out.println("Entro a t");
+                        ///TTTT
+                        a = 1;
+                        codigoSalidaTemp = "t" + t + "=" + op1 + pila1.peek() + op2 + "\n";//Operacion real
+                        codigoSalidaTemp = CodigoEnsamblador.asignaciones("t" + t, op1, pila1.peek(), op2);
+                        ultimoAsignado = "t" + t;
+                        //verificar si la operacion no es un id ya
+                        if (op1.contains("t") || op1.contains("a") || op2.contains("t") || op2.contains("a")) {
+                            //Si contiene variables cambio de temp
+                            codigoSalidaTemp = "a" + a + "=" + op1 + pila1.peek() + op2 + "\n";//Operacion real
+                            codigoSalidaTemp = CodigoEnsamblador.asignaciones(("a" + a), op1, pila1.peek(), op2);
+                            ultimoAsignado = "a" + a;
+                            pila2.push("a" + a);
+                            //System.out.println("metiendo a pila2: ");
+                            tActivo = false;
+                            a++;
+                        } else {
+                            pila2.push("t" + t);
+                        }
+                        t++;
+                    } else {
+                        System.out.println("entro a A");
+                        //AAAA
+                        t = 1;
+                        codigoSalidaTemp = "a" + a + "=" + op1 + pila1.peek() + op2 + "\n"; //Aqui intercepto y realizo la operacion real
+                        codigoSalidaTemp = CodigoEnsamblador.asignaciones("a" + a, op1, pila1.peek(), op2);
+                        ultimoAsignado = "a" + a;
+                        if (op1.contains("a") || op1.contains("t") || op2.contains("a") || op2.contains("t")) {
+                            codigoSalidaTemp = "t" + t + "=" + op1 + pila1.peek() + op2 + "\n"; //Aqui intercepto y realizo la operacion real
+                            codigoSalidaTemp = CodigoEnsamblador.asignaciones("t" + t, op1, pila1.peek(), op2);
+                            ultimoAsignado = "t" + t;
+                            pila2.push("t" + t);
+                            tActivo = true;
+                            t++;
+                        } else {
+                            pila2.push("a" + a);
+                        }
+                        a++;
+                    }
+                    codigoSalida += codigoSalidaTemp;
+                    System.out.println("codigoSalidaTemp: " + codigoSalidaTemp);
                     pila1.pop();
                 } else {
                     //Numero o temporal
@@ -857,15 +904,18 @@ public class CodigoIntermedio {
                 }
                 o++;
             }
+            //codigoSalida+=(";"+var+"="+ultimoAsignado);
+            codigoSalida += CodigoEnsamblador.asignacionVar(var, ultimoAsignado);
             // System.err.println("ultimo pila: "+ultimoPeek+"SALI DE LOOP ");
         }
-        System.out.println("cont vale: " + cont);
-        if (cont == 0) {
-            codigoSalida = this.imprimirLista(codigoEntrada).replace(";", "").replace("\n", "");
+        /*
+         System.out.println("cont vale: " + cont);
+         if (cont == 0) {
+         codigoSalida = this.imprimirLista(codigoEntrada).replace(";", "").replace("\n", "");
 
-        } else {
-            codigoSalida += var + "=t" + (nTemps - 1);
-        }
+         } else {
+         codigoSalida += var + "=t" + (nTemps - 1);
+         }*/
 
 
         System.out.println("Cuerpo final de: " + prefijo + "/S_assign->\n" + codigoSalida);
@@ -926,9 +976,9 @@ public class CodigoIntermedio {
         System.out.println("B: " + this.imprimirLista(B));
         //Codigo
         String codigoSalida = "";
-        codigoSalida += B(B, prefijo + "B")+"\n";
+        codigoSalida += B(B, prefijo + "B") + "\n";
         try {
-            codigoSalida += this.imprimirEtiqueta(prefijo + "B.true")+"\n";
+            codigoSalida += this.imprimirEtiqueta(prefijo + "B.true") + "\n";
         } catch (Exception e) {
             System.out.println("--->NO PUDE IMPRIMIR ETIQUETA: " + prefijo + "B.true");
         }
